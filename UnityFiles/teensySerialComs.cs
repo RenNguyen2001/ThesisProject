@@ -33,19 +33,25 @@ public class teensySerialComs : MonoBehaviour
         print('\n');
         print("packet start");
         //need to identify the first byte
-        //perhaps use the falling edge detection of a '\n'
+        //perhaps use the falling edge detection of a '\n' - THIS DIDN'T WORK
+        //perhaps send a dummy byte - PARTIALLY WORKED
 
         byte[] value = new byte[7];
-        string line = serialObj.ReadLine(); //THIS CAUSES UNITY TO CRASH
         serialObj.Read(value, 0, 7);
-        //print('\n');
-        //print("values below");
+        
         for (byte i = 0; i < value.Length; i++)
         {
-            print(value[i]);
+            switch(value[i])    //to sort through the array to find the useful values
+            {
+                case 44: break;     // ','
+                case 0x0A: break;   //'\n'
+                case 0: break;      //dummy byte
+                default: print(value[i]);   break;  //valid results/ values that we want to extract
+            }
+            //print(value[i]);
         }
         print("packet end");
-        print('\n');    print(line);
+        print('\n'); 
         //print ("h");
         //
     }
@@ -67,4 +73,7 @@ public class teensySerialComs : MonoBehaviour
     1. Using the Read() function to store th uarts bytes into an array
         prints fine except that the first value (1) isn't printed with the rest of the array
         for example it prints: 44, 5, 44, 14, 44 instead of 1, 44, 5, 44, 14, 44
+    Used a dummy byte, this partially removed the problem. However after each successfull print, there is
+    an array print of just 0s along with the dummy byte.
+    For example let the dummy byte be 10, the print would be: 10, 0, 0, 0, 0, 0
 */
