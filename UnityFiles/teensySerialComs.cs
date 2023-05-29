@@ -30,12 +30,23 @@ public class teensySerialComs : MonoBehaviour
         //              WITH ARDUINO
         //size of byte = 1, char = 2, int = 4 in c#
 
-        //need to identify the first byte
-        int value = serialObj.ReadByte();
         print('\n');
-        print("values below");
-        print (value);
-        print ("h");
+        print("packet start");
+        //need to identify the first byte
+        //perhaps use the falling edge detection of a '\n'
+
+        byte[] value = new byte[7];
+        string line = serialObj.ReadLine();
+        serialObj.Read(value, 0, 7);
+        //print('\n');
+        //print("values below");
+        for (byte i = 0; i < value.Length; i++)
+        {
+            print(value[i]);
+        }
+        print("packet end");
+        print('\n');    print(line);
+        //print ("h");
         //
     }
 
@@ -44,6 +55,7 @@ public class teensySerialComs : MonoBehaviour
 
 //solutions tested
 /*
+ * 29/05 before 11:00pm
     1. Changed the microcontroller from the teensy to the arduino
         Problem still occurs
     2. Wait for new data to enter before reading the data into a variable
@@ -51,4 +63,8 @@ public class teensySerialComs : MonoBehaviour
     Problem found:
     The serial print line command in the arduino problem was causing errors in the uart signals
     
+    29/05 after 11:00pm
+    1. Using the Read() function to store th uarts bytes into an array
+        prints fine except that the first value (1) isn't printed with the rest of the array
+        for example it prints: 44, 5, 44, 14, 44 instead of 1, 44, 5, 44, 14, 44
 */
