@@ -36,7 +36,7 @@ public class teensySerialComs : MonoBehaviour
         //perhaps use the falling edge detection of a '\n'
 
         byte[] value = new byte[7];
-        string line = serialObj.ReadLine();
+        string line = serialObj.ReadLine(); //THIS CAUSES UNITY TO CRASH
         serialObj.Read(value, 0, 7);
         //print('\n');
         //print("values below");
