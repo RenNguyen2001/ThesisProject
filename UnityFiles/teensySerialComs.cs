@@ -12,11 +12,15 @@ public class teensySerialComs : MonoBehaviour
 {
     SerialPort serialObj = new SerialPort("COM3");   //creating an object from the SerialPort class
     //Teensy uses the COM10 port
+    int startByte;
+    int startCondition;
                                                         
     void Start()    //as implied by the name, commands inside this loop only print once
     {
         //print ("hello");
         //Console.WriteLine("hello");   Console.ReadLine();
+        startByte = 0;
+        startCondition = 0;
 
         serialObj.DataBits = 8;
         serialObj.BaudRate = (int)1e6;
@@ -35,32 +39,48 @@ public class teensySerialComs : MonoBehaviour
         //perhaps use the falling edge detection of a '\n' - THIS DIDN'T WORK
         //perhaps send a dummy byte - PARTIALLY WORKED
 
-        byte numOfValues = 5;
-        byte numOfDirectionVectors = 3; //number of direction parameters (e.g. x, y and z)
+        byte numOfValues = 6;   //number of bytes being sent (excluding the dummies and '\n' at the end)
         byte[] value = new byte[numOfValues]; //make this the same size as the amount of data being sent from the teensy/arduino
-        byte[] directionVal = new byte[numOfDirectionVectors];  //stores the directions values x, y and z in an array
+        int[] directionVal = new int[numOfValues/2];  //stores the directions values x, y and z in an array
 
-        if (serialObj.ReadByte() == 0)  //if dummy byte is found, in otherwords if the value valid/correct
+        //=============================== START BIT CONDITION CHECK ========================================
+        //START BIT CONDITON: 1ST BYTE = 255, 2ND BYTE >= 105
+
+        if (serialObj.ReadByte() == 110)
         {
-            print("packet start");
-            serialObj.Read(value, 0, numOfValues);    //print("valid value found");
+            serialObj.Read(value, 0, numOfValues);  //minus the number of start bits
+            startCondition = 1; startByte = 0;
+            print("packet start"); 
+        }
+
+        if (startByte == 0 && serialObj.ReadByte() == 255)  //if dummy byte is found, the value is valid/correct
+        {
+            //the max value of each 16 bits value (8 bits combined to form the 16-bit val) is 360 (max angle)
+            //store this byte for now and wait to see if the byte after this is > 105 (360-105)
+            //if its true than the start condition is true and unity can store the data in the line
+            print("first start byte detected");
+            startByte = 1;
+        }
+        else if(startByte == 1 && serialObj.ReadByte() != 110)
+        { startByte = 0; } //indicates that the number after the 1st start bit (255) is not > 105
+
+        //==================================================================================================
+
+        if (startCondition == 1)
+        {
+            
+            for (byte i = 0; i < numOfValues; i++)
+            {
+                
+                print(value[i]);
+            }
+            //directionVal[0] = value[0] | ((UInt16)value[1] << 8);  print(directionVal[0]);
+            //directionVal[0] = value[0] | ((UInt16)value[1] << 8); print(directionVal[0]);
+
+            print("packet end"); print('\n');
+            startCondition = 0;
         }
         
-
-        int j = 0;
-        for (byte i = 0; i < value.Length; i++)
-        {
-            switch(value[i])    //to sort through the array to find the useful values
-            {
-                case 44: break;     // ','
-                case 0x0A: break;   //'\n'
-                case 0:    break;   //dummy byte    
-                default: directionVal[j] = value[i]; print(directionVal[j]); j++;  break;  //valid results/ values that we want to extract
-            }
-            //print(value[i]);
-        }
-
-        if (j == numOfDirectionVectors) { print("packet end"); print('\n'); }   //put outside loop so it only checks once and doesn't slow down code
     }
 
     
@@ -88,4 +108,6 @@ public class teensySerialComs : MonoBehaviour
     -Added an if statement to check if the first byte is the dummy byte. Only then
     will the whole line be read into a byte array.
     This has solved the error on 29/05 completely
+
+    - Tried to add multi-byte transmission
 */
