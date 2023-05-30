@@ -39,7 +39,7 @@ public class teensySerialComs : MonoBehaviour
         //=============================== START BIT CONDITION CHECK ========================================
         //START BIT CONDITON: 1ST BYTE = 255, 2ND BYTE >= 105
 
-        if (serialObj.ReadByte() == 110)
+        if (startByte == 1 && serialObj.ReadByte() == 110)
         {
             serialObj.Read(value, 0, numOfValues);  //minus the number of start bits
             startCondition = 1; startByte = 0;
