@@ -75,7 +75,9 @@ public class teensySerialComs : MonoBehaviour
                 print(value[i]);
             }
             //directionVal[0] = value[0] | ((UInt16)value[1] << 8);  print(directionVal[0]);
-            //directionVal[0] = value[0] | ((UInt16)value[1] << 8); print(directionVal[0]);
+            //directionVal[1] = value[2] | ((UInt16)value[3] << 8); print(directionVal[1]);
+            directionVal[2] = value[4] | ((UInt16)value[5] << 8); print(directionVal[2]);
+
 
             print("packet end"); print('\n');
             startCondition = 0;
