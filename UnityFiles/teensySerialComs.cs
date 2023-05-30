@@ -68,16 +68,15 @@ public class teensySerialComs : MonoBehaviour
 
         if (startCondition == 1)
         {
-            
-            for (byte i = 0; i < numOfValues; i++)
-            {
-                
-                print(value[i]);
-            }
             //directionVal[0] = value[0] | ((UInt16)value[1] << 8);  print(directionVal[0]);
             //directionVal[1] = value[2] | ((UInt16)value[3] << 8); print(directionVal[1]);
-            directionVal[2] = value[4] | ((UInt16)value[5] << 8); print(directionVal[2]);
+            //directionVal[2] = value[4] | ((UInt16)value[5] << 8); print(directionVal[2]);
+            //directionVal[i] = value[i*2] | ((UInt16)value[i*2 + 1] << 8); print(directionVal[2]);
 
+            for (byte i = 0; i < directionVal.Length; i++)
+            {
+                directionVal[i] = value[i*2] | ((UInt16)value[i*2 + 1] << 8); print(directionVal[i]);
+            }
 
             print("packet end"); print('\n');
             startCondition = 0;
