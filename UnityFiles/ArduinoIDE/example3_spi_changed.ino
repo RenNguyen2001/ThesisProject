@@ -44,8 +44,8 @@ void setup(){
 	Serial.println("LSM6DSV16X Example 3 - Basic Readings SPI");
 
 	IMU_setup(25);
-  IMU_setup(30);
-  IMU_setup(5);
+  //IMU_setup(30);
+  //IMU_setup(5);
 
 }
 
@@ -98,9 +98,16 @@ void IMU_setup(char csPin){
   digitalWrite(csPin, HIGH);
 }
 
-void loop(){
+void unityDataPrep(){
+  //Convert the data into an angle between 0 and 360
+  
+  
+}
 
-  for(char i = 0; i < 3; i++)
+void loop(){
+  int tempAcc[3], tempGyro[3];
+
+  for(char i = 0; i < 1; i++)
   {
     int cs_Pin;
     switch(i)
@@ -116,16 +123,19 @@ void loop(){
   	if( myLSM.checkStatus() ){
   		myLSM.getAccel(&accelData);
   		myLSM.getGyro(&gyroData);
-      //Serial.print("cs_Pin"); Serial.println(cs_Pin);
+
+      tempAcc[0] = accelData.xData; tempAcc[1] = accelData.yData; tempAcc[2] = accelData.zData;   
+      tempGyro[0] = gyroData.xData; tempGyro[1] = gyroData.yData; tempGyro[2] = gyroData.zData;
+      
   		Serial.println("Accelerometer: ");  
-  		Serial.println("X: ");  Serial.print(accelData.xData);  Serial.print(" ");
-  		Serial.println("Y: ");  Serial.print(accelData.yData);  Serial.print(" ");
-  		Serial.println("Z: ");  Serial.print(accelData.zData);  Serial.print(" ");
+  		Serial.print("X: ");  Serial.print(tempAcc[0]);  Serial.println(" ");
+  		Serial.print("Y: ");  Serial.print(tempAcc[1]);  Serial.println(" ");
+  		Serial.print("Z: ");  Serial.print(tempAcc[2]);  Serial.println(" ");
       
   		Serial.println("Gyroscope: ");
-  		Serial.println("X: ");  Serial.print(gyroData.xData); Serial.print(" ");
-  		Serial.println("Y: ");  Serial.print(gyroData.yData); Serial.print(" ");
-  		Serial.println("Z: ");  Serial.print(gyroData.zData); Serial.println(" ");
+  		Serial.print("X: ");  Serial.print(tempGyro[0]); Serial.println(" ");
+  		Serial.print("Y: ");  Serial.print(tempGyro[1]); Serial.println(" ");
+  		Serial.print("Z: ");  Serial.print(tempGyro[2]); Serial.println(" ");
       Serial.println(" ");
   	}
     else
