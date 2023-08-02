@@ -98,19 +98,32 @@ void IMU_setup(char csPin){
   digitalWrite(csPin, HIGH);
 }
 
-void unityDataPrep(){
-  //Convert the data into an angle between 0 and 360
-  
+void unityDataPrep(int accArr[]){
+  char byteH, byteL;
+  int directions[] = {254, 400, 555};
+  int x, y, z;
+  directions[0] = accArr[0]; directions[1] = accArr[1]; directions[2] = accArr[2];   
+
+  Serial.write(255);  Serial.write(110);  //sending the dummy byte(s) to mark the first byte
+  //need to seperate each interger into two bytes to send
+  for(int i = 0; i < sizeof(directions)/sizeof(int); i++)
+  {
+    //for each loop, the data is seperated into two bytes and then sent
+        
+    byteL = directions[i];
+        
+    byteH = (unsigned int)directions[i] >> 8;
+        
+    Serial.write(byteL);  Serial.write(byteH);
+   }
+   Serial.write('\n');
+   delayMicroseconds(50);
   
 }
 
 void loop(){
   int tempAcc[3], tempGyro[3];
- 
-  char byteH, byteL;
-  int directions[] = {254, 400, 555};
-  int x, y, z;
-   
+
   for(char i = 0; i < 1; i++)
   {
     int cs_Pin;
@@ -131,6 +144,7 @@ void loop(){
       tempAcc[0] = accelData.xData; tempAcc[1] = accelData.yData; tempAcc[2] = accelData.zData;   
       tempGyro[0] = gyroData.xData; tempGyro[1] = gyroData.yData; tempGyro[2] = gyroData.zData;
 
+      unityDataPrep(tempAcc);
       /*
       Serial.println("Accelerometer: ");  
       Serial.print("X: ");  Serial.print(tempAcc[0]);  Serial.println(" ");
@@ -143,30 +157,12 @@ void loop(){
       Serial.print("Z: ");  Serial.print(tempGyro[2]); Serial.println(" ");
       Serial.println(" ");
       */
-
-      directions[0] = tempAcc[0]; directions[1] = tempAcc[1]; directions[2] = tempAcc[2];   
-
-      Serial.write(255);  Serial.write(110);  //sending the dummy byte(s) to mark the first byte
-      //need to seperate each interger into two bytes to send
-      for(int i = 0; i < sizeof(directions)/sizeof(int); i++)
-      {
-        //for each loop, the data is seperated into two bytes and then sent
-        
-        byteL = directions[i];
-        
-        byteH = (unsigned int)directions[i] >> 8;
-        
-        Serial.write(byteL);  Serial.write(byteH);
-      }
-      Serial.write('\n');
-      delayMicroseconds(50);
-  
     }
     else
     {
       //Serial.println("Error");
     }
     digitalWrite(cs_Pin, HIGH);
-    delay(100);
+    delay(50);
   }
 }
