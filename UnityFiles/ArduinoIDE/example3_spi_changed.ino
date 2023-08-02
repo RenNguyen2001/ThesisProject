@@ -2,24 +2,24 @@
   example3-spi
 
   This example shows the basic settings and functions for retrieving accelerometer
-	and gyroscopic data but using the SPI interface. Everything other than that is 
-	identical to the "basic" example.
+  and gyroscopic data but using the SPI interface. Everything other than that is 
+  identical to the "basic" example.
 
   Written by Elias Santistevan @ SparkFun Electronics, May 2022
 
-	Products:
+  Products:
 
-	SparkFun 6DoF LSM6DSV16X (Qwiic):
-		https://www.sparkfun.com/products/21325
+  SparkFun 6DoF LSM6DSV16X (Qwiic):
+    https://www.sparkfun.com/products/21325
 
-	SparkFun Micro 6DoF LSM6DSV16X (Qwiic): 
-		https://www.sparkfun.com/products/21336	
+  SparkFun Micro 6DoF LSM6DSV16X (Qwiic): 
+    https://www.sparkfun.com/products/21336 
 
   Repository:
-		https://github.com/sparkfun/SparkFun_LSM6DSV16X_Arduino_Library
+    https://github.com/sparkfun/SparkFun_LSM6DSV16X_Arduino_Library
 
   SparkFun code, firmware, and software is released under the MIT 
-	License	(http://opensource.org/licenses/MIT).
+  License (http://opensource.org/licenses/MIT).
 */
 
 #include <SPI.h>
@@ -37,13 +37,13 @@ int chipSelect = 28;
 
 void setup(){
 
-	SPI.begin();
+  SPI.begin();
 
-	Serial.begin(115200);
-	while(!Serial) {}
-	Serial.println("LSM6DSV16X Example 3 - Basic Readings SPI");
+  Serial.begin(115200);
+  while(!Serial) {}
+  Serial.println("LSM6DSV16X Example 3 - Basic Readings SPI");
 
-	IMU_setup(25);
+  IMU_setup(25);
   //IMU_setup(30);
   //IMU_setup(5);
 
@@ -123,28 +123,28 @@ void loop(){
     //digitalWrite(cs_Pin, LOW); Serial.print("Case: "); Serial.println(cs_Pin);
     //chars can't be printed properly
     
-  	// Check if both gyroscope and accelerometer data is available.
-  	if( myLSM.checkStatus() ){
-  		myLSM.getAccel(&accelData);
-  		myLSM.getGyro(&gyroData);
+    // Check if both gyroscope and accelerometer data is available.
+    if( myLSM.checkStatus() ){
+      myLSM.getAccel(&accelData);
+      myLSM.getGyro(&gyroData);
 
       tempAcc[0] = accelData.xData; tempAcc[1] = accelData.yData; tempAcc[2] = accelData.zData;   
       tempGyro[0] = gyroData.xData; tempGyro[1] = gyroData.yData; tempGyro[2] = gyroData.zData;
 
       /*
-  		Serial.println("Accelerometer: ");  
-  		Serial.print("X: ");  Serial.print(tempAcc[0]);  Serial.println(" ");
-  		Serial.print("Y: ");  Serial.print(tempAcc[1]);  Serial.println(" ");
-  		Serial.print("Z: ");  Serial.print(tempAcc[2]);  Serial.println(" ");
+      Serial.println("Accelerometer: ");  
+      Serial.print("X: ");  Serial.print(tempAcc[0]);  Serial.println(" ");
+      Serial.print("Y: ");  Serial.print(tempAcc[1]);  Serial.println(" ");
+      Serial.print("Z: ");  Serial.print(tempAcc[2]);  Serial.println(" ");
       
-  		Serial.println("Gyroscope: ");
-  		Serial.print("X: ");  Serial.print(tempGyro[0]); Serial.println(" ");
-  		Serial.print("Y: ");  Serial.print(tempGyro[1]); Serial.println(" ");
-  		Serial.print("Z: ");  Serial.print(tempGyro[2]); Serial.println(" ");
+      Serial.println("Gyroscope: ");
+      Serial.print("X: ");  Serial.print(tempGyro[0]); Serial.println(" ");
+      Serial.print("Y: ");  Serial.print(tempGyro[1]); Serial.println(" ");
+      Serial.print("Z: ");  Serial.print(tempGyro[2]); Serial.println(" ");
       Serial.println(" ");
       */
 
-      directions[0] = tempAcc[0];  
+      directions[0] = tempAcc[0]; directions[1] = tempAcc[1]; directions[2] = tempAcc[2];   
 
       Serial.write(255);  Serial.write(110);  //sending the dummy byte(s) to mark the first byte
       //need to seperate each interger into two bytes to send
@@ -161,12 +161,12 @@ void loop(){
       Serial.write('\n');
       delayMicroseconds(50);
   
-  	}
+    }
     else
     {
       //Serial.println("Error");
     }
     digitalWrite(cs_Pin, HIGH);
-  	delay(100);
+    delay(100);
   }
 }
