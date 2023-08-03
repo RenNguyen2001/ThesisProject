@@ -98,31 +98,32 @@ void IMU_setup(char csPin){
   digitalWrite(csPin, HIGH);
 }
 
-void unityDataPrep(int accArr[]){
-  char byteH, byteL;
-  int directions[] = {254, 400, 555};
+void unityDataPrep(int16_t accArr[]){
+  int8_t byteH, byteL;
+  int16_t directions[] = {254, 400, 555};  //needs to be two bytes to store values up to 65000
   int x, y, z;
   directions[0] = accArr[0]; directions[1] = accArr[1]; directions[2] = accArr[2];   
+  //Serial.print("Size of normal int is:"); Serial.println(sizeof(directions[0]));  Serial.print("Size of acc int is:"); Serial.println(sizeof(accArr[0]));
 
   Serial.write(255);  Serial.write(110);  //sending the dummy byte(s) to mark the first byte
   //need to seperate each interger into two bytes to send
-  for(int i = 0; i < sizeof(directions)/sizeof(int); i++)
+  for(int i = 0; i < sizeof(directions)/sizeof(directions[0]); i++)
   {
     //for each loop, the data is seperated into two bytes and then sent
         
     byteL = directions[i];
         
-    byteH = (unsigned int)directions[i] >> 8;
+    byteH = (signed short)directions[i] >> 8;
         
     Serial.write(byteL);  Serial.write(byteH);
    }
    Serial.write('\n');
-   delayMicroseconds(50);
+   delayMicroseconds(100);
   
 }
 
 void loop(){
-  int tempAcc[3], tempGyro[3];
+  int16_t tempAcc[3], tempGyro[3];
 
   for(char i = 0; i < 1; i++)
   {
@@ -145,12 +146,15 @@ void loop(){
       tempGyro[0] = gyroData.xData; tempGyro[1] = gyroData.yData; tempGyro[2] = gyroData.zData;
 
       unityDataPrep(tempAcc);
-      /*
+
+      
       Serial.println("Accelerometer: ");  
       Serial.print("X: ");  Serial.print(tempAcc[0]);  Serial.println(" ");
       Serial.print("Y: ");  Serial.print(tempAcc[1]);  Serial.println(" ");
       Serial.print("Z: ");  Serial.print(tempAcc[2]);  Serial.println(" ");
       
+
+      /*
       Serial.println("Gyroscope: ");
       Serial.print("X: ");  Serial.print(tempGyro[0]); Serial.println(" ");
       Serial.print("Y: ");  Serial.print(tempGyro[1]); Serial.println(" ");
@@ -163,6 +167,6 @@ void loop(){
       //Serial.println("Error");
     }
     digitalWrite(cs_Pin, HIGH);
-    delay(50);
+    delayMicroseconds(50);
   }
 }
