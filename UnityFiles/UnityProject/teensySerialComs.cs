@@ -11,7 +11,7 @@ using System.Threading;
 public class teensySerialComs : MonoBehaviour
 {
     SerialPort serialObj = new SerialPort("COM10");   //creating an object from the SerialPort class
-    
+
     //Teensy uses the COM10 port
     int startByte;
     int startCondition;
@@ -24,7 +24,7 @@ public class teensySerialComs : MonoBehaviour
 
         serialObj.DataBits = 8;
         serialObj.BaudRate = (int)1e6;
-        
+
         serialObj.Open();
     }
 
@@ -70,16 +70,16 @@ public class teensySerialComs : MonoBehaviour
         {
             for (byte i = 0; i < directionVal.Length; i++)  //combines the 8 bit usart vals into 16 bit vals
             {
-                directionVal[i] = value[i * 2] | ((UInt16)value[i * 2 + 1] << 8); print(directionVal[i]);
+                directionVal[i] = value[i * 2] | ((Int16)value[i * 2 + 1] << 8); print(directionVal[i]);
             }
 
             print("packet end"); print('\n');
             startCondition = 0;
-            transform.localRotation = Quaternion.Euler(directionVal[0], 0, 0);
+            transform.localRotation = Quaternion.Euler(directionVal[0], directionVal[1], directionVal[2]);
         }
         return directionVal[0];
     }
 
-    
+
 }
 
