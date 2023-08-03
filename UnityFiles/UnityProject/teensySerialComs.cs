@@ -70,12 +70,12 @@ public class teensySerialComs : MonoBehaviour
         {
             for (byte i = 0; i < directionVal.Length; i++)  //combines the 8 bit usart vals into 16 bit vals
             {
-                directionVal[i] = value[i * 2] | ((Int16)value[i * 2 + 1] << 8); print(directionVal[i]);
+                directionVal[i] = value[i * 2] | ((Int16)value[i * 2 + 1] << 8); print((Int16)directionVal[i]);
             }
 
             print("packet end"); print('\n');
             startCondition = 0;
-            transform.localRotation = Quaternion.Euler(directionVal[0], directionVal[1], directionVal[2]);
+            transform.localRotation = Quaternion.Euler((Int16)directionVal[0], (Int16)directionVal[1], (Int16)directionVal[2]);
         }
         return directionVal[0];
     }
