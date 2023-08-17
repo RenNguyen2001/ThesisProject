@@ -1,4 +1,5 @@
 #include <LSM6DSV16XSensor.h>
+#include <math.h>
 
 #define SENSOR_ODR 104.0f // In Hertz
 #define ACC_FS 2 // In g
@@ -67,7 +68,7 @@ void gameSetup(){
   AccGyr.Write_Reg(0x01, 0x00000000 + 0b10000000); //enable the embed reg access
   AccGyr.Write_Reg(0x02, 0x00000001 + 0b00000000); //turning page to embed page
   status |= AccGyr.Write_Reg(0x04, 0b00000010); //set the SFLP_game_EN bit in the EMB_FUNC_EN_A reg
-  status |= AccGyr.Write_Reg(0x5E, 0b01000011 + 0b00011000); //sflp odr set
+  status |= AccGyr.Write_Reg(0x5E, 0b01000011 + 0b00101000); //sflp odr set
   status |= AccGyr.Write_Reg(0x66, 0b00000010); //sflp initialisation request
   status |= AccGyr.Write_Reg(0x44, 0b00000010); //enable sflp game batching to fifo
 }
@@ -87,28 +88,28 @@ void unityDataPrep(int16_t gameArr[]){
         
     byteL = directions[i];
         
-    byteH = (signed short)directions[i] >> 8;
+    byteH = (int16_t)directions[i] >> 8;
         
     Serial.write(byteL);  Serial.write(byteH);
    }
    Serial.write('\n');
-   delayMicroseconds(100);
+   delayMicroseconds(10);
   
 }
 
 void loop() {
   uint8_t tag, temp, gameData[6];
-  uint16_t quart[3];
+  int16_t quart[3];
   uint16_t temp16;
   int32_t temp32;
 
   //checkGameRegs();
   
   AccGyr.Write_Reg(0x01, 0x00000000 + 0b00000000); //disable the embed reg access
-  AccGyr.FIFO_Get_Tag(&tag);  Serial.print("Tag: "); Serial.println(tag, HEX);
-  AccGyr.FIFO_Get_Full_Status(&temp);  Serial.print("Status: "); Serial.println(temp);
-  AccGyr.FIFO_Get_Num_Samples(&temp16); Serial.print("Num of Samples: "); Serial.println(temp16);
-  AccGyr.FIFO_Get_Data(gameData); Serial.println("Game Vector: "); 
+  //AccGyr.FIFO_Get_Tag(&tag);  //Serial.print("Tag: "); Serial.println(tag, HEX);
+  //AccGyr.FIFO_Get_Full_Status(&temp);  //Serial.print("Status: "); Serial.println(temp);
+  //AccGyr.FIFO_Get_Num_Samples(&temp16); //Serial.print("Num of Samples: "); Serial.println(temp16);
+  AccGyr.FIFO_Get_Data(gameData); //Serial.println("Game Vector: ");   //for some reason this command causes the fifo tage and num of samples to be 0
   for(int i = 0; i < 3; i++)
   {
     /*
@@ -118,11 +119,10 @@ void loop() {
 
      quart[i] = (uint16_t)(data[i*2] << 8) + data[i*2+1];
      */
-     quart[i] = (uint16_t)(gameData[i*2] << 8) + gameData[i*2+1];
+     quart[i] = (int16_t)(gameData[i*2] << 8) + gameData[i*2+1];
+     //Serial.print("Gamedata No. ");  Serial.print(i); Serial.print(" :"); Serial.println(quart[i]);
   }
-  Serial.print("X: "); Serial.println(quart[0]);  //for some reason this command causes the fifo tage and num of samples to be 0
-  Serial.print("Y: "); Serial.println(quart[1]);
-  Serial.print("Z: "); Serial.println(quart[2]);
+  Serial.print("X: "); Serial.println(quart[0]); Serial.print("Y: "); Serial.println(quart[1]); Serial.print("Z: "); Serial.println(quart[2]);
 
   unityDataPrep(quart);
 }
