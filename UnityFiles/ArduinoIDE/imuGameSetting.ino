@@ -15,7 +15,7 @@
 #define SPI_SCK 13
 
 LSM6DSV16XSensor AccGyr(&SPI, CS_PIN);
-volatile uint8_t fullFlag = 0; // FIFO full flag
+volatile uint8_t fullFlag = 0; // FIFO full flagn 
 uint8_t status = 0;
 unsigned long timestamp_count = 0;
 bool acc_available = false;
@@ -97,19 +97,13 @@ void unityDataPrep(int16_t gameArr[]){
   
 }
 
-void loop() {
-  uint8_t tag, temp, gameData[6];
-  int16_t quart[3];
-  uint16_t temp16;
-  int32_t temp32;
-
-  //checkGameRegs();
-  
+void getFifoData(uint8_t fifoData[], int16_t quartData[]){
   AccGyr.Write_Reg(0x01, 0x00000000 + 0b00000000); //disable the embed reg access
   //AccGyr.FIFO_Get_Tag(&tag);  //Serial.print("Tag: "); Serial.println(tag, HEX);
   //AccGyr.FIFO_Get_Full_Status(&temp);  //Serial.print("Status: "); Serial.println(temp);
   //AccGyr.FIFO_Get_Num_Samples(&temp16); //Serial.print("Num of Samples: "); Serial.println(temp16);
-  AccGyr.FIFO_Get_Data(gameData); //Serial.println("Game Vector: ");   //for some reason this command causes the fifo tage and num of samples to be 0
+  AccGyr.FIFO_Get_Data(fifoData); //Serial.println("Game Vector: ");   //for some reason this command causes the fifo tage and num of samples to be 0
+
   for(int i = 0; i < 3; i++)
   {
     /*
@@ -119,11 +113,21 @@ void loop() {
 
      quart[i] = (uint16_t)(data[i*2] << 8) + data[i*2+1];
      */
-     quart[i] = (int16_t)(gameData[i*2] << 8) + gameData[i*2+1];
-     //Serial.print("Gamedata No. ");  Serial.print(i); Serial.print(" :"); Serial.println(quart[i]);
+     quartData[i] = (int16_t)(fifoData[i*2] << 8) + fifoData[i*2+1];
+     //Serial.print("Gamedata No. ");  Serial.print(i); Serial.print(" :"); Serial.println(quartData[i]);
   }
-  Serial.print("X: "); Serial.println(quart[0]); Serial.print("Y: "); Serial.println(quart[1]); Serial.print("Z: "); Serial.println(quart[2]);
+  Serial.print("X: "); Serial.println(quartData[0]); Serial.print("Y: "); Serial.println(quartData[1]); Serial.print("Z: "); Serial.println(quartData[2]);
+}
 
+void loop() {
+  uint8_t tag, temp, gameData[6];
+  int16_t quart[3];
+  uint16_t temp16;
+  int32_t temp32;
+
+  //checkGameRegs();
+  
+  getFifoData(gameData, quart);
   unityDataPrep(quart);
 }
 
