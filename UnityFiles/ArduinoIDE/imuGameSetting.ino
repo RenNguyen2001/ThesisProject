@@ -2,7 +2,7 @@
 #include <math.h>
 
 #define SENSOR_ODR 104.0f // In Hertz
-#define ACC_FS 2 // In g
+#define ACC_FS 8 // In g
 #define GYR_FS 2000 // In dps
 //FS is range
 #define MEASUREMENT_TIME_INTERVAL (1000.0f/SENSOR_ODR) // In ms
@@ -38,6 +38,13 @@ void setup() {
   AccGyr.Write_Reg(0x11, 0x01); //enable gyro by setting the odr
 
   gameSetup();
+  //regularSetup();
+}
+
+void regularSetup(){
+  //setting the filter
+  AccGyr.Set_X_Filter_Mode(0,7);
+  AccGyr.Set_G_Filter_Mode(1,7);
   
   // Configure ODR and FS of the acc and gyro
   AccGyr.Write_Reg(0x01, 0x00000000 + 0b00000000); //disable the embed reg access
@@ -47,11 +54,42 @@ void setup() {
   status |= AccGyr.Set_G_FS(GYR_FS);
   
   // Configure FIFO BDR for acc and gyro
-  
-  //status |= AccGyr.FIFO_Set_X_BDR(SENSOR_ODR);
-  //status |= AccGyr.FIFO_Set_G_BDR(SENSOR_ODR);
+  status |= AccGyr.FIFO_Set_X_BDR(SENSOR_ODR);
+  status |= AccGyr.FIFO_Set_G_BDR(SENSOR_ODR);
 
-  //AccGyr.Write_Reg(0x66, 0b00000010); //sflp initialisation request
+  //setting the filter
+  AccGyr.Set_X_Filter_Mode(0,7);
+  AccGyr.Set_G_Filter_Mode(1,7);
+
+  // Set FIFO in Continuous mode
+  status |= AccGyr.FIFO_Set_Mode(LSM6DSV16X_STREAM_MODE);
+  
+  if(status != LSM6DSV16X_OK) {
+    Serial.println("LSM6DSV16X Sensor failed to init/configure");
+    while(1);
+  }
+  Serial.println("LSM6DSV16X FIFO Demo");
+}
+
+void gameSetup(){
+  //setting the filter
+  AccGyr.Set_X_Filter_Mode(0,7);
+  AccGyr.Set_G_Filter_Mode(1,7);
+  
+  AccGyr.Write_Reg(0x01, 0x00000000 + 0b10000000); //enable the embed reg access
+  AccGyr.Write_Reg(0x02, 0x00000001 + 0b00000000); //turning page to embed page
+  status |= AccGyr.Write_Reg(0x04, 0b00000010); //set the SFLP_game_EN bit in the EMB_FUNC_EN_A reg
+  status |= AccGyr.Write_Reg(0x5E, 0b01000011 + 0b00101000); //sflp odr set
+  status |= AccGyr.Write_Reg(0x66, 0b00000010); //sflp initialisation request
+  status |= AccGyr.Write_Reg(0x44, 0b00000010); //enable sflp game batching to fifo
+
+  // Configure ODR and FS of the acc and gyro
+  AccGyr.Write_Reg(0x01, 0x00000000 + 0b00000000); //disable the embed reg access
+  status |= AccGyr.Set_X_ODR(SENSOR_ODR);
+  status |= AccGyr.Set_X_FS(ACC_FS);
+  status |= AccGyr.Set_G_ODR(SENSOR_ODR);
+  status |= AccGyr.Set_G_FS(GYR_FS);
+  
   
   // Set FIFO in Continuous mode
   status |= AccGyr.FIFO_Set_Mode(LSM6DSV16X_STREAM_MODE);
@@ -61,16 +99,6 @@ void setup() {
     while(1);
   }
   Serial.println("LSM6DSV16X FIFO Demo");
-
-}
-
-void gameSetup(){
-  AccGyr.Write_Reg(0x01, 0x00000000 + 0b10000000); //enable the embed reg access
-  AccGyr.Write_Reg(0x02, 0x00000001 + 0b00000000); //turning page to embed page
-  status |= AccGyr.Write_Reg(0x04, 0b00000010); //set the SFLP_game_EN bit in the EMB_FUNC_EN_A reg
-  status |= AccGyr.Write_Reg(0x5E, 0b01000011 + 0b00101000); //sflp odr set
-  status |= AccGyr.Write_Reg(0x66, 0b00000010); //sflp initialisation request
-  status |= AccGyr.Write_Reg(0x44, 0b00000010); //enable sflp game batching to fifo
 }
 
 void unityDataPrep(int16_t gameArr[]){
@@ -97,12 +125,17 @@ void unityDataPrep(int16_t gameArr[]){
   
 }
 
-void getFifoData(uint8_t fifoData[], int16_t quartData[]){
+void getFifoData(int16_t quatData[]){
+  uint8_t fifoData[3], tag, temp;;
+  uint16_t temp16;
+  float quatVal[3];
+  
+  
   AccGyr.Write_Reg(0x01, 0x00000000 + 0b00000000); //disable the embed reg access
-  //AccGyr.FIFO_Get_Tag(&tag);  //Serial.print("Tag: "); Serial.println(tag, HEX);
-  //AccGyr.FIFO_Get_Full_Status(&temp);  //Serial.print("Status: "); Serial.println(temp);
-  //AccGyr.FIFO_Get_Num_Samples(&temp16); //Serial.print("Num of Samples: "); Serial.println(temp16);
-  AccGyr.FIFO_Get_Data(fifoData); //Serial.println("Game Vector: ");   //for some reason this command causes the fifo tage and num of samples to be 0
+  //AccGyr.FIFO_Get_Tag(&tag);  Serial.print("Tag: "); Serial.println(tag, HEX);
+  //AccGyr.FIFO_Get_Full_Status(&temp);  Serial.print("Status: "); Serial.println(temp);
+  //AccGyr.FIFO_Get_Num_Samples(&temp16); Serial.print("Num of Samples: "); Serial.println(temp16);
+  AccGyr.FIFO_Get_Data(fifoData); //Serial.println("Game Vector: ");   //for some reason this command causes the fifo tag and num of samples to be 0
 
   for(int i = 0; i < 3; i++)
   {
@@ -113,22 +146,66 @@ void getFifoData(uint8_t fifoData[], int16_t quartData[]){
 
      quart[i] = (uint16_t)(data[i*2] << 8) + data[i*2+1];
      */
-     quartData[i] = (int16_t)(fifoData[i*2] << 8) + fifoData[i*2+1];
+     quatData[i] = (int16_t)(fifoData[i*2] << 8) + (int16_t)fifoData[i*2+1];
+     //quatVal[i] = quatData/65536;
+     //quatData[i] = (fifoData[i*2]) + (int16_t)(fifoData[i*2+1] << 8);
      //Serial.print("Gamedata No. ");  Serial.print(i); Serial.print(" :"); Serial.println(quartData[i]);
   }
-  Serial.print("X: "); Serial.println(quartData[0]); Serial.print("Y: "); Serial.println(quartData[1]); Serial.print("Z: "); Serial.println(quartData[2]);
+  Serial.print("Quat X: "); Serial.print(quatData[0]); Serial.print(" Quat Y: "); Serial.print(quatData[1]); Serial.print(" Quat Z: "); Serial.println(quatData[2]); 
+  //Serial.print("quatData[0] (byte check):"); Serial.println(quatData[0],BIN); Serial.print("quatData[0] (hex check):"); Serial.println(quatData[0],HEX);
+
+  //Serial.print("X: "); Serial.println(quatData[0]);
+}
+
+void get_AccGyro(uint8_t gameData[]){
+  int32_t gyroVal[3], accVal[3];
+
+  //AccGyr.FIFO_Get_X_Axes(accVal); Serial.println("Acc: ");  Serial.print(" X:"); Serial.print(accVal[0]);  Serial.print(" Y:"); Serial.print(accVal[1]);  Serial.print(" Z:"); Serial.println(accVal[2]);
+  AccGyr.FIFO_Get_G_Axes(gyroVal); Serial.print(" GyrX:");  Serial.print(gyroVal[0]); Serial.print(" GyrY:");  Serial.print(gyroVal[1]); Serial.print(" GyrZ:");  Serial.println(gyroVal[2]);
+  
+  
+}
+
+void quatToEuler(int16_t q[]){
+  float eulerResult[3];
+  float eulerDegrees[3];
+
+  //q[0] = 18733; q[1] = -6621; q[2] = -16993;  q[3] = -1;
+  q[3] = 1;
+  //Roll calculation
+  eulerResult[0] = atan2( ( 2*(q[0]*q[1] + (q[2]*q[3]) ) ) , (sq(q[0]) + sq(q[3]) - sq(q[1]) - sq(q[2])) ); //you can't square numbers like this "x^2", this is just "x+2" in c
+  eulerDegrees[0] = (float)eulerResult[0] * (float)(180/3.14);  //converting from radians to degrees
+
+  //Pitch calculation
+  eulerResult[1] =  asin(    2*((q[0]*q[2])-(q[1]*q[3])) );
+
+  //Yaw calculation
+  eulerResult[2] =  atan2(   (2*(q[0]*q[3]+(q[1]*q[2]))) , (sq(q[0])+sq(q[1])-sq(q[2])-sq(q[3])) );
+
+  Serial.print("Roll (radians):"); Serial.print(eulerResult[0]);  Serial.print(" Pitch (radians):"); Serial.print(eulerResult[1]); Serial.print(" Yaw (radians):"); Serial.println(eulerResult[2]);
+  //Serial.print("Euler ang x (degrees):"); Serial.println(eulerDegrees[0]);
 }
 
 void loop() {
-  uint8_t tag, temp, gameData[6];
-  int16_t quart[3];
-  uint16_t temp16;
-  int32_t temp32;
+  uint8_t gameData[6];
+  int16_t eulerAng[3], quat[4];
 
   //checkGameRegs();
-  
-  getFifoData(gameData, quart);
-  unityDataPrep(quart);
+
+  //===Functions for game====
+  //
+  getFifoData(quat);
+  //unityDataPrep(quat);
+  //quatToEuler(quat);
+  delay(1);
+  //
+  //=========================
+
+  //===Functions for AccGyro only======
+  //
+  //get_AccGyro(gameData);
+  //delay(1);
+  //
 }
 
 void checkGameRegs(){
